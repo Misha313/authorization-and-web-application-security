@@ -2,8 +2,12 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const express = require('express');
 
+const auth = require('./middlewares/auth');
+
 const usersRouter = require('./routes/users.js');
 const cardsRouter = require('./routes/cards.js');
+
+const { createUser, login } = require('./controllers/users');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -17,13 +21,10 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useFindAndModify: false,
 });
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '5f3b1a02b456a22dec9f5cb2',
-  };
+app.post('/signin', login);
+app.post('/signup', createUser);
 
-  next();
-});
+app.use(auth);
 
 app.use('/', usersRouter);
 app.use('/', cardsRouter);
