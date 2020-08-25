@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const secretKey = require('../secretKey');
 const User = require('../models/user');
 
 module.exports.createUser = (req, res) => {
@@ -9,19 +10,31 @@ module.exports.createUser = (req, res) => {
 
   bcrypt.hash(password, 10)
     .then((hash) => User.create({
-      name,
-      about,
-      avatar,
-      email,
-      password: hash,
+      name, about, avatar, email, password: hash,
     }))
-    .then((user) => res.status(200).send(user))
+    .then((user) => {
+      res.status(200).send({
+        _id: user._id,
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+      });
+    })
     .catch((err) => {
+      if (!password) {
+        res.status(400).send({ massage: 'Введите пароль' });
+        return;
+      }
       if (err.name === 'ValidationError') {
         res.status(400).send({ massage: err.message });
         return;
       }
-      res.status(500).send({ massage: err.message });
+      if (err.name === 'MongoError' || err.code === 11000) {
+        res.status(400).send({ massage: 'Пользователь с такой почтой уже существет' });
+        return;
+      }
+      res.status(500).send({ massage: err.name });
     });
 };
 
@@ -32,10 +45,9 @@ module.exports.login = (req, res) => {
     .then((user) => {
       const token = jwt.sign(
         { _id: user._id },
-        'some-secret-key',
+        secretKey,
         { expiresIn: '7d' },
       );
-
       res.send({ token });
     })
     .catch((err) => {

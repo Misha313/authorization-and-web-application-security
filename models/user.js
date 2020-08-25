@@ -28,7 +28,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    select: false,
     validate: {
       validator: (v) => isEmail(v),
       message: 'Неверный формат почты',
@@ -38,12 +37,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 8,
+    select: false,
   },
 });
 
 // eslint-disable-next-line func-names
 userSchema.statics.findUserByCredentials = function (email, password) {
-  return this.findOne({ email }).select('+password')
+  return this.findOne({ email })
     .then((user) => {
       if (!user) {
         return Promise.reject(new Error('Неправильные почта или пароль'));
@@ -54,7 +54,6 @@ userSchema.statics.findUserByCredentials = function (email, password) {
           if (!matched) {
             return Promise.reject(new Error('Неправильные почта или пароль'));
           }
-
           return user;
         });
     });

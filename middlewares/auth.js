@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const secretKey = require('../secretKey');
 
 const handleAuthError = (res) => {
   res
@@ -20,7 +21,7 @@ module.exports = (req, res, next) => {
   let payload;
 
   try {
-    payload = jwt.verify(token, 'super-strong-secret');
+    payload = jwt.verify(token, secretKey);
   } catch (err) {
     return handleAuthError(res);
   }
