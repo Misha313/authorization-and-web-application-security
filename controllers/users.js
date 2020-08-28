@@ -8,6 +8,11 @@ module.exports.createUser = (req, res) => {
     name, about, avatar, email, password,
   } = req.body;
 
+  if (!password) {
+    res.status(400).send({ massage: 'Введите пароль' });
+    return;
+  }
+
   bcrypt.hash(password, 10)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
@@ -22,16 +27,12 @@ module.exports.createUser = (req, res) => {
       });
     })
     .catch((err) => {
-      if (!password) {
-        res.status(400).send({ massage: 'Введите пароль' });
-        return;
-      }
       if (err.name === 'ValidationError') {
         res.status(400).send({ massage: err.message });
         return;
       }
       if (err.name === 'MongoError' || err.code === 11000) {
-        res.status(400).send({ massage: 'Пользователь с такой почтой уже существет' });
+        res.status(409).send({ massage: 'Пользователь с такой почтой уже существет' });
         return;
       }
       res.status(500).send({ massage: err.name });
